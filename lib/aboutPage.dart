@@ -1,6 +1,6 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
-import 'package:projeto_flutter01/inicialHome.dart';
+import 'package:projeto_flutter01/main.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
