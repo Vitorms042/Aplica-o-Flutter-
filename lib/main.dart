@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:projeto_flutter01/eventos.dart';
+import 'package:projeto_flutter01/ferramentas.dart';
+import 'package:projeto_flutter01/perfilFuncionarios.dart';
+import 'package:projeto_flutter01/servicosDisponiveis.dart';
 import 'package:projeto_flutter01/signupPage.dart';
 import 'package:projeto_flutter01/AuthProvider.dart';
 import 'package:provider/provider.dart'; 
@@ -30,6 +34,10 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomePage(),
         '/signup': (context) => const SignupPage(),
+        '/services': (context) => const ServicePage(),
+        '/perfil': (context) => const perfilFuncionario(),
+        '/ferramentas': (context) => const TelaFerramentas(),
+        '/eventos': (context) => const TelaEventos(),
       },
     );
   }
@@ -63,22 +71,26 @@ class _HomePageState extends State<HomePage> {
     {
       'title': 'Sobre o Portal',
       'subtitle': 'Entenda como funciona o Portal da SYDLE.',
-      'icon': Icons.info
+      'icon': Icons.info,
+      'route': '/',
     },
     {
       'title': 'Serviços',
       'subtitle': 'Soluções para suas demandas com nossos serviços.',
-      'icon': Icons.build
+      'icon': Icons.build,
+      'route': '/services',
     },
     {
       'title': 'Próximos Eventos',
       'subtitle': 'Acesse e inscreva-se nos próximos eventos.',
-      'icon': Icons.event
+      'icon': Icons.event,
+      'route': '/eventos',
     },
     {
       'title': 'Reservar Itens',
       'subtitle': 'Reserve salas, materiais, máquinas, e outros utilitários.',
-      'icon': Icons.storage
+      'icon': Icons.storage,
+      'route': '/ferramentas',
     },
   ];
 
@@ -113,9 +125,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showProfilePage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Abrindo página do perfil...")),
-    );
+     Navigator.pushNamed(context, '/perfil');
   }
 
   OverlayEntry _createNotificationOverlay(BuildContext context) {
@@ -585,7 +595,9 @@ class _HomePageState extends State<HomePage> {
                                 icon: iconData,
                                 title: item['title']!,
                                 subtitle: item['subtitle']!,
-                                onTap: () {},
+                                onTap: () {
+                                   Navigator.pushNamed(context, item['route']);
+                                },
                               );
                             }).toList(),
                           ),
@@ -628,7 +640,7 @@ class _HomePageState extends State<HomePage> {
   }) {
     return InkWell(
       onTap: onTap,
-      onHighlightChanged: (isHighlighted) {},
+      // onHighlightChanged: (isHighlighted) {},
       splashColor: Colors.blue.withOpacity(0.2),
       highlightColor: Colors.blue.withOpacity(0.1),
       borderRadius: BorderRadius.circular(15.0),
