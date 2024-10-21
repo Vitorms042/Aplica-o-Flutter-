@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_flutter01/signupPage.dart'; 
+import 'package:projeto_flutter01/main.dart';
+import 'package:projeto_flutter01/signupPage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,15 +27,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class ServicePage extends StatefulWidget {
+  const ServicePage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<ServicePage> {
   final TextEditingController _loginController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
@@ -230,215 +231,156 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Align(
-          alignment: Alignment.centerLeft,
-          child: Image.network(
-            'https://servicedesk.sydle.com/logo',
-            height: 100.0,
-            width: 100.0,
-          ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Align(
+        alignment: Alignment.centerLeft,
+        child: Image.network(
+          'https://servicedesk.sydle.com/logo',
+          height: 100.0,
+          width: 100.0,
         ),
-        backgroundColor: Colors.black,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            color: Colors.white,
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
+      ),
+      backgroundColor: Colors.black,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          color: Colors.white,
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            color: Colors.white,
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications),
+          color: Colors.white,
+          onPressed: () {
+            if (_notificationOverlayEntry == null) {
+              _showNotificationOverlay();
+            } else {
+              _closeNotificationOverlay();
+            }
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: ElevatedButton(
             onPressed: () {
-              if (_notificationOverlayEntry == null) {
-                _showNotificationOverlay();
-              } else {
-                _closeNotificationOverlay();
-              }
+              _showLoginDialog(context);
             },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                _showLoginDialog(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 32, 104, 199),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                'Entrar',
-                style: TextStyle(color: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 32, 104, 199),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
             ),
+            child: const Text(
+              'Entrar',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    ),
+    drawer: Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Colors.black,
+            ),
+            child: Image.network(
+              'https://servicedesk.sydle.com/logo',
+              height: 10.0,
+              width: 10.0,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_circle),
+            title: const Text('Perfil'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: const Text('Configurações'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.feedback),
+            title: const Text('Ajuda'),
+            onTap: () {
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.black,
-              ),
-              child: Image.network(
-                'https://servicedesk.sydle.com/logo',
-                height: 10.0,
-                width: 10.0,
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle),
-              title: const Text('Perfil'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Configurações'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.feedback),
-              title: const Text('Ajuda'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-     body: SingleChildScrollView(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      buildSearchHeader(),
-      const SizedBox(height: 20),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.only(bottom: 60.0), // Adicionei um padding no final do conteúdo
+      child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Catálogos',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            buildSearchHeader(),
             const SizedBox(height: 20),
-            _buildCatalogCard(
-              icon: Icons.info,
-              title: 'Sobre o Portal',
-              subtitle: 'Entenda como funciona o Portal da SYDLE.',
-              onTap: () {
-              },
-            ),
-            _buildCatalogCard(
-              icon: Icons.build,
-              title: 'Serviços',
-              subtitle: 'Soluções para suas demandas com nossos serviços.',
-              onTap: () {
-              },
-            ),
-            _buildCatalogCard(
-              icon: Icons.event,
-              title: 'Próximos Eventos',
-              subtitle: 'Acesse e inscreva-se nos próximos eventos.',
-              onTap: () {
-              },
-            ),
-          ],
-        ),
-      ),
-    ],
-  ),
-),
-      bottomSheet: Container(
-        color: Colors.black,
-        height: 60,
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Powered by ',
-                style: TextStyle(color: Colors.white),
-              ),
-              Image.network(
-                'https://servicedesk.sydle.com/logo',
-                height: 100.0,
-                width: 100.0,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCatalogCard({
-  required IconData icon,
-  required String title,
-  required String subtitle,
-  required VoidCallback onTap,
-}) {
-  return MouseRegion(
-    onEnter: (_) {
-      setState(() {});
-    },
-    onExit: (_) {
-      setState(() {});
-    },
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      height: 110,
-      child:  GestureDetector(
-    onTap: onTap,
-    child: Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      elevation: 5, 
-      margin: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 30, color: Colors.blue),
-            const SizedBox(width: 15),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 18,
+                  const Text(
+                    'Serviços',
+                    style: TextStyle(
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
+                  const SizedBox(height: 20),
+                  _buildCard(
+                    icon: Icons.work,
+                    title: 'Gestão de Projetos Internos',
+                    description: 'Centralize e acompanhe o progresso de todos os projetos da empresa, garantindo prazos e metas claras para a equipe.',
+                  ),
+                  _buildCard(
+                    icon: Icons.schedule,
+                    title: 'Controle de Ponto e Jornada de Trabalho',
+                    description: 'Solução digital para registro de ponto, acompanhamento de horas trabalhadas e gestão de banco de horas.',
+                  ),
+                  _buildCard(
+                    icon: Icons.paid,
+                    title: 'Sistema de Reembolso de Despesas',
+                    description: 'Facilite o envio, aprovação e controle de reembolsos de despesas, tornando o processo rápido e transparente.',
+                  ),
+                  _buildCard(
+                    icon: Icons.flight_takeoff,
+                    title: 'Gestão de Benefícios e Férias',
+                    description: 'Acompanhamento de benefícios, férias e licenças, garantindo transparência e organização para os funcionários.',
+                  ),
+                  Align(
+                    alignment: Alignment.bottomRight,  // Alinha o botão à direita
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 10.0, right: 10.0),  // Baixa e ajusta o botão um pouco
+                      child: OutlinedButton(
+                        onPressed: () {
+                          // Ação ao clicar no botão "VER MAIS"
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Colors.black, width: 2), // Borda preta
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Ajuste de padding interno
+                        ),
+                        child: const Text(
+                          'VER MAIS',
+                          style: TextStyle(color: Colors.black), // Texto preto
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -448,38 +390,125 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     ),
-   ),
-  ),
-  ); 
+    bottomSheet: Container(
+      color: Colors.black,
+      height: 60,
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Powered by ',
+              style: TextStyle(color: Colors.white),
+            ),
+            Image.network(
+              'https://servicedesk.sydle.com/logo',
+              height: 100.0,
+              width: 100.0,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
+
+
+Widget _buildCard({
+  required IconData icon,
+  required String title,
+  required String description,
+}) {
+  return Card(
+    elevation: 4.0,
+    margin: const EdgeInsets.symmetric(vertical: 10.0),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(icon, size: 40, color: Colors.blue),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 15),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end, // Alinha os botões à direita
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Ação do botão "Saiba mais"
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(title),
+                        content: const Text("Mais detalhes sobre o serviço."),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text("Fechar"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: const Text("Saiba mais"),
+                ),
+                const SizedBox(width: 10), // Espaço entre os botões
+                ElevatedButton(
+                  onPressed: () {
+                    // Ação do botão "Acessar serviço" (não implementada)
+                  },
+                  child: const Text("Acessar serviço"),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+
 
   Widget buildSearchHeader() {
     return Stack(
       children: [
-        Container(
-          height: 220,
-          decoration: const BoxDecoration(
-            image: DecorationImage(image: NetworkImage('https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        ),
         Column(
           children: [
             const SizedBox(height: 20),
         const Text(
-          'Portal de Relacionamento',
+          'Nossos Serviços',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 30,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 5),
         const Text(
-          'Tire suas dúvidas agora mesmo!',
+          'As melhores soluções para as suas necessidades',
           style: TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 20,
           ),
         ),
@@ -489,13 +518,17 @@ class _HomePageState extends State<HomePage> {
           child: Container(
             height: 45,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withOpacity(0),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.black,  // Cor da borda
+                width: 2.0,           // Largura da borda
+              ),
             ),
             child: TextField(
               controller: _searchController,
               decoration: const InputDecoration(
-                hintText: 'Buscar',
+                hintText: 'Pesquisar serviço',
                 prefixIcon: Icon(Icons.search),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 10),
