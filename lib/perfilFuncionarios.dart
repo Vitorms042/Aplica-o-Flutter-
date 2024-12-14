@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_flutter01/main.dart';
-import 'package:projeto_flutter01/signupPage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,8 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => const HomePage(),
-        '/signup': (context) => const SignupPage(),
+        '/': (context) => const perfilFuncionario()
       },
     );
   }
@@ -95,7 +92,7 @@ class _HomePageState extends State<perfilFuncionario> {
 
   void _showNotificationOverlay() {
     _notificationOverlayEntry = _createNotificationOverlay(context);
-    Overlay.of(context)?.insert(_notificationOverlayEntry!);
+    Overlay.of(context).insert(_notificationOverlayEntry!);
   }
 
   void _closeNotificationOverlay() {
@@ -231,18 +228,20 @@ class _HomePageState extends State<perfilFuncionario> {
     );
   }
 
-Widget build(BuildContext context) {
+@override
+  Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: Align(
         alignment: Alignment.centerLeft,
         child: Image.network(
           'https://servicedesk.sydle.com/logo',
-          height: 100.0,
-          width: 100.0,
+          height: 40.0,
+          width: 40.0,
         ),
       ),
       backgroundColor: Colors.black,
+      elevation: 4,
       leading: Builder(
         builder: (context) => IconButton(
           icon: const Icon(Icons.menu),
@@ -275,6 +274,7 @@ Widget build(BuildContext context) {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
             ),
             child: const Text(
               'Entrar',
@@ -294,8 +294,8 @@ Widget build(BuildContext context) {
             ),
             child: Image.network(
               'https://servicedesk.sydle.com/logo',
-              height: 10.0,
-              width: 10.0,
+              height: 60.0,
+              width: 60.0,
             ),
           ),
           ListTile(
@@ -315,55 +315,144 @@ Widget build(BuildContext context) {
         ],
       ),
     ),
-    body: Padding(
+    body: SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Center(
-            child: Column(
+          Center(
+            child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                Column(
+                  children: [
+                    SizedBox(
+                      height: 120,
+                      child: PageView(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+                          ),
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: NetworkImage('https://via.placeholder.com/150/1'),
+                          ),
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: NetworkImage('https://via.placeholder.com/150/2'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Nome do Funcionário',
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Cargo: Desenvolvedor de Software',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const Text(
+                      'Departamento: Tecnologia da Informação',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20),
-                Text(
-                  'Nome do Funcionário',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Cargo: Desenvolvedor de Software',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                ),
-                Text(
-                  'Departamento: Tecnologia da Informação',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.black),
+                          onPressed: () {
+                            // Edit profile action
+                          },
+                        ),
+                        const Text(
+                          'EDITAR',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 30),
+          const Divider(thickness: 1, color: Colors.grey),
+          const SizedBox(height: 10),
           const Text(
             'Informações de Contato',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 10),
           _buildProfileInfoRow(Icons.email, 'Email: funcionario@empresa.com'),
           _buildProfileInfoRow(Icons.phone, 'Telefone: +55 (11) 98765-4321'),
           _buildProfileInfoRow(Icons.location_on, 'Endereço: Rua da Empresa, 123, São Paulo, SP'),
 
-          const SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              IconButton(
+                icon: Icon(Icons.call),
+                color: Colors.blue,
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.email),
+                color: Colors.blue,
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: Icon(Icons.message),
+                color: Colors.blue,
+                onPressed: () {},
+              ),
+            ],
+          ),
+          const Divider(thickness: 1, color: Colors.grey),
+          const SizedBox(height: 20),
           const Text(
             'Histórico na Empresa',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 10),
           _buildProfileInfoRow(Icons.calendar_today, 'Data de Admissão: 01/01/2020'),
           _buildProfileInfoRow(Icons.access_time, 'Anos de serviço: 4 anos'),
-
-          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: LinearProgressIndicator(
+              value: 4 / 10,
+              backgroundColor: Colors.grey[300],
+              color: Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 30),
+          const Divider(thickness: 1, color: Colors.grey),
+          const SizedBox(height: 10),
+          const Text(
+            'Informações Pessoais',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 10),
+          _buildProfileInfoRow(Icons.cake, 'Data de Nascimento: 15/03/1985'),
+          _buildProfileInfoRow(Icons.person, 'Gênero: Masculino'),
+          _buildProfileInfoRow(Icons.badge, 'Estado Civil: Solteiro'),
+          _buildProfileInfoRow(Icons.flag, 'Nacionalidade: Brasileiro'),
+          _buildProfileInfoRow(Icons.language, 'Idiomas: Português, Inglês, Espanhol'),
+          _buildProfileInfoRow(Icons.group, 'Dependentes: 2'),
         ],
       ),
     ),
@@ -380,13 +469,14 @@ Widget build(BuildContext context) {
             ),
             Image.network(
               'https://servicedesk.sydle.com/logo',
-              height: 50.0,
-              width: 50.0,
+              height: 40.0,
+              width: 40.0,
             ),
           ],
         ),
       ),
     ),
+    backgroundColor: Colors.white,
   );
 }
 
@@ -405,86 +495,6 @@ Widget _buildProfileInfoRow(IconData icon, String text) {
     ),
   );
 }
-
-
-
-
-
-Widget _buildCard({
-  required IconData icon,
-  required String title,
-  required String description,
-}) {
-  return Card(
-    elevation: 4.0,
-    margin: const EdgeInsets.symmetric(vertical: 10.0),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Icon(icon, size: 40, color: Colors.blue),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            description,
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 15),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(title),
-                        content: const Text("Mais detalhes sobre o serviço."),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text("Fechar"),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: const Text("Saiba mais"),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    
-                  },
-                  child: const Text("Acessar serviço"),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-
 
   Widget buildSearchHeader() {
     return Stack(

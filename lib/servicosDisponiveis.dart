@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:projeto_flutter01/main.dart';
+import 'package:projeto_flutter01/serviceRh.dart';
 import 'package:projeto_flutter01/signupPage.dart';
 
 void main() {
@@ -18,10 +18,11 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/services',
       routes: {
-        '/': (context) => const HomePage(),
+        '/': (context) => const ServicePage(),
         '/signup': (context) => const SignupPage(),
+        '/servicesRH': (context) => RHScreen(),
       },
     );
   }
@@ -95,7 +96,7 @@ class _HomePageState extends State<ServicePage> {
 
   void _showNotificationOverlay() {
     _notificationOverlayEntry = _createNotificationOverlay(context);
-    Overlay.of(context)?.insert(_notificationOverlayEntry!);
+    Overlay.of(context).insert(_notificationOverlayEntry!);
   }
 
   void _closeNotificationOverlay() {
@@ -348,21 +349,49 @@ Widget build(BuildContext context) {
                     icon: Icons.work,
                     title: 'Gestão de Projetos Internos',
                     description: 'Centralize e acompanhe o progresso de todos os projetos da empresa, garantindo prazos e metas claras para a equipe.',
+                    context: context,
                   ),
                   _buildCard(
                     icon: Icons.schedule,
                     title: 'Controle de Ponto e Jornada de Trabalho',
                     description: 'Solução digital para registro de ponto, acompanhamento de horas trabalhadas e gestão de banco de horas.',
+                    context: context,
                   ),
                   _buildCard(
                     icon: Icons.paid,
                     title: 'Sistema de Reembolso de Despesas',
                     description: 'Facilite o envio, aprovação e controle de reembolsos de despesas, tornando o processo rápido e transparente.',
+                    context: context,
                   ),
                   _buildCard(
                     icon: Icons.flight_takeoff,
                     title: 'Gestão de Benefícios e Férias',
                     description: 'Acompanhamento de benefícios, férias e licenças, garantindo transparência e organização para os funcionários.',
+                    context: context,
+                  ),
+                  _buildCard(
+                    icon: Icons.people,
+                    title: 'Gestão de Recursos Humanos',
+                    description: 'Organize e acompanhe todos os processos de RH, incluindo contratações, avaliações e treinamentos de equipe.',
+                    context: context,
+                  ),
+                  _buildCard(
+                    icon: Icons.task_alt,
+                    title: 'Gestão de Tarefas e Produtividade',
+                    description: 'Organize tarefas e acompanhe o progresso para garantir o cumprimento de metas e prazos.',
+                    context: context,
+                  ),
+                  _buildCard(
+                    icon: Icons.inventory,
+                    title: 'Gestão de Estoque e Inventário',
+                    description: 'Acompanhe o inventário, controle entradas e saídas de produtos e evite rupturas de estoque.',
+                    context: context,
+                  ),
+                  _buildCard(
+                    icon: Icons.support_agent,
+                    title: 'Suporte ao Cliente e Feedback',
+                    description: 'Gerencie solicitações de clientes e colete feedback para melhorar a experiência e satisfação.',
+                    context: context,
                   ),
                   Align(
                     alignment: Alignment.bottomRight,  // Alinha o botão à direita
@@ -374,11 +403,22 @@ Widget build(BuildContext context) {
                         },
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.black, width: 2), // Borda preta
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // Ajuste de padding interno
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14), // Ajuste de padding
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12), // Bordas arredondadas
+                          ),
+                          foregroundColor: Colors.black, // Cor do texto e do ícone
+                          backgroundColor: Colors.white, // Cor de fundo
+                          shadowColor: Colors.black.withOpacity(0.1),
+                          elevation: 4, // Sombra para dar profundidade
                         ),
                         child: const Text(
                           'VER MAIS',
-                          style: TextStyle(color: Colors.black), // Texto preto
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600, // Texto em negrito
+                            letterSpacing: 1.2, // Espaçamento entre letras
+                          ),
                         ),
                       ),
                     ),
@@ -413,58 +453,91 @@ Widget build(BuildContext context) {
   );
 }
 
-
 Widget _buildCard({
   required IconData icon,
   required String title,
   required String description,
+  required BuildContext context,
 }) {
   return Card(
-    elevation: 4.0,
-    margin: const EdgeInsets.symmetric(vertical: 10.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(15.0), // Borda arredondada
+    ),
+    color: Colors.white,
+    elevation: 6.0,
+    shadowColor: Colors.grey.withOpacity(0.4), // Sombra sutil
+    margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
     child: Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Icon(icon, size: 40, color: Colors.blue),
-              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 30, color: Colors.blue),
+              ),
+              const SizedBox(width: 15),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 15),
           Text(
             description,
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16, color: Colors.black54),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
           Align(
             alignment: Alignment.centerRight,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.end, // Alinha os botões à direita
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: Colors.blue.shade700,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
                   onPressed: () {
-                    // Ação do botão "Saiba mais"
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(title),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15.0),
+                        ),
+                        title: Text(
+                          title,
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         content: const Text("Mais detalhes sobre o serviço."),
                         actions: <Widget>[
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: const Text("Fechar"),
+                            child: const Text(
+                              "Fechar",
+                              style: TextStyle(color: Colors.blue),
+                            ),
                           ),
                         ],
                       ),
@@ -472,10 +545,18 @@ Widget _buildCard({
                   },
                   child: const Text("Saiba mais"),
                 ),
-                const SizedBox(width: 10), // Espaço entre os botões
+                const SizedBox(width: 10),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
                   onPressed: () {
-                    // Ação do botão "Acessar serviço" (não implementada)
+                    // Ação do botão "Acessar serviço"
                   },
                   child: const Text("Acessar serviço"),
                 ),
@@ -488,59 +569,71 @@ Widget _buildCard({
   );
 }
 
-
-
   Widget buildSearchHeader() {
-    return Stack(
-      children: [
-        Column(
-          children: [
-            const SizedBox(height: 20),
-        const Text(
-          'Nossos Serviços',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 5),
-        const Text(
-          'As melhores soluções para as suas necessidades',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-          ),
-        ),
-        const SizedBox(height: 15),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Container(
-            height: 45,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.black,  // Cor da borda
-                width: 2.0,           // Largura da borda
-              ),
-            ),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Pesquisar serviço',
-                prefixIcon: Icon(Icons.search),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 10),
+  return Stack(
+    children: [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          const Center(
+            child: Text(
+              'Nossos Serviços',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ),
-      ],
-    ),
-      ],
-    );
-  }
+          const SizedBox(height: 5),
+          const Center(
+            child: Text(
+              'As melhores soluções para as suas necessidades',
+              style: TextStyle(
+                color: Colors.black54, // Cor cinza suave para o texto secundário
+                fontSize: 18,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100, // Fundo sutil para o campo de pesquisa
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.black.withOpacity(0.2), // Borda com opacidade reduzida
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.15),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3), // Sombra leve abaixo
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Pesquisar serviço',
+                  hintStyle: TextStyle(color: Colors.black54),
+                  prefixIcon: Icon(Icons.search, color: Colors.black54),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
 }
 
 class _PasswordField extends StatefulWidget {

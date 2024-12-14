@@ -7,6 +7,7 @@ class Ferramenta {
   Ferramenta({required this.nome, required this.descricao});
 }
 
+// Lista de ferramentas e itens fornecidos pela empresa
 List<Ferramenta> ferramentas = [
   Ferramenta(
     nome: "Notebook Dell XPS",
@@ -26,34 +27,59 @@ List<Ferramenta> ferramentas = [
   ),
 ];
 
-class TelaFerramentas extends StatelessWidget {
+class TelaFerramentas extends StatefulWidget {
   const TelaFerramentas({super.key});
+
+  @override
+  _TelaFerramentasState createState() => _TelaFerramentasState();
+}
+
+class _TelaFerramentasState extends State<TelaFerramentas> {
+  String query = "";
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ferramentas Disponíveis'),
-      ),
-      body: ListView.builder(
-        itemCount: ferramentas.length,
-        itemBuilder: (context, index) {
-          final ferramenta = ferramentas[index];
-          return _buildToolCard(
-            title: ferramenta.nome,
-            description: ferramenta.descricao,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetalhesFerramenta(ferramenta: ferramenta),
-                ),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          buildSearchHeader(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredFerramentas().length,
+              itemBuilder: (context, index) {
+                final ferramenta = _filteredFerramentas()[index];
+                return _buildToolCard(
+                  title: ferramenta.nome,
+                  description: ferramenta.descricao,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DetalhesFerramenta(ferramenta: ferramenta),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          buildFooter(), // Adicionando o footer
+        ],
       ),
     );
+  }
+
+  List<Ferramenta> _filteredFerramentas() {
+    if (query.isEmpty) {
+      return ferramentas;
+    } else {
+      return ferramentas
+          .where((ferramenta) =>
+              ferramenta.nome.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
   }
 
   Widget _buildToolCard({
@@ -69,7 +95,7 @@ class TelaFerramentas extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        height: 120,
+        height: 130,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.0),
@@ -104,6 +130,92 @@ class TelaFerramentas extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSearchHeader() {
+    return Stack(
+      children: [
+        Container(
+          height: 220,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: NetworkImage(
+                  'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Column(
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'Portal de Relacionamento',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              'Tire suas dúvidas agora mesmo!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar',
+                    prefixIcon: Icon(Icons.search),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onChanged: (query) {
+                    setState(() {
+                      this.query = query;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget buildFooter() {
+    return Container(
+      color: Colors.black,
+      height: 60,
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Powered by ',
+              style: TextStyle(color: Colors.white),
+            ),
+            Image.network(
+              'https://servicedesk.sydle.com/logo',
+              height: 30.0, // Ajuste a altura do logo conforme necessário
+              width: 30.0,  // Ajuste a largura do logo conforme necessário
+            ),
+          ],
         ),
       ),
     );

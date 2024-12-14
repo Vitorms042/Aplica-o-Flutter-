@@ -26,35 +26,59 @@ List<Evento> eventos = [
   ),
 ];
 
-class TelaEventos extends StatelessWidget {
+class TelaEventos extends StatefulWidget {
   const TelaEventos({super.key});
+
+  @override
+  _TelaEventosState createState() => _TelaEventosState();
+}
+
+class _TelaEventosState extends State<TelaEventos> {
+  String query = "";
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Próximos Eventos'),
-      ),
-      body: ListView.builder(
-        itemCount: eventos.length,
-        itemBuilder: (context, index) {
-          final evento = eventos[index];
-          return _buildEventCard(
-            date: evento.data,
-            title: evento.nome,
-            description: evento.descricao,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DetalhesEvento(evento: evento),
-                ),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          buildSearchHeader(),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredEventos().length,
+              itemBuilder: (context, index) {
+                final evento = _filteredEventos()[index];
+                return _buildEventCard(
+                  date: evento.data,
+                  title: evento.nome,
+                  description: evento.descricao,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DetalhesEvento(evento: evento),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          buildFooter(), // Adicionando o footer
+        ],
       ),
     );
+  }
+
+  List<Evento> _filteredEventos() {
+    if (query.isEmpty) {
+      return eventos;
+    } else {
+      return eventos
+          .where((evento) =>
+              evento.nome.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
   }
 
   Widget _buildEventCard({
@@ -115,6 +139,92 @@ class TelaEventos extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildSearchHeader() {
+    return Stack(
+      children: [
+        Container(
+          height: 220,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: NetworkImage(
+                  'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Column(
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'Portal de Relacionamento',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 5),
+            const Text(
+              'Tire suas dúvidas agora mesmo!',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar',
+                    prefixIcon: Icon(Icons.search),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onChanged: (query) {
+                    setState(() {
+                      this.query = query;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget buildFooter() {
+    return Container(
+      color: Colors.black,
+      height: 60,
+      child: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Powered by ',
+              style: TextStyle(color: Colors.white),
+            ),
+            Image.network(
+              'https://servicedesk.sydle.com/logo',
+              height: 30.0, // Ajuste a altura do logo conforme necessário
+              width: 30.0,  // Ajuste a largura do logo conforme necessário
+            ),
+          ],
         ),
       ),
     );
