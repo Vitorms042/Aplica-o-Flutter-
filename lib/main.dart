@@ -1,17 +1,27 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:projeto_flutter01/eventos.dart';
 import 'package:projeto_flutter01/ferramentas.dart';
 import 'package:projeto_flutter01/perfilFuncionarios.dart';
 import 'package:projeto_flutter01/servicosDisponiveis.dart';
 import 'package:projeto_flutter01/signupPage.dart';
-import 'package:projeto_flutter01/AuthProvider.dart';
 import 'package:provider/provider.dart'; 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:projeto_flutter01/auth_service.dart';
+import 'firebase_options.dart';
+import 'HomeScreenBase.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(
      MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        Provider(create: (_) => AuthService()),
       ],
       child: const MyApp(),
      ),
@@ -58,7 +68,7 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _emailController = TextEditingController();
 
   String? _errorMessage;
-  bool _isLoggedIn = false;
+  final bool _isLoggedIn = false;
   OverlayEntry? _notificationOverlayEntry;
 
   @override
@@ -182,7 +192,7 @@ class _HomePageState extends State<HomePage> {
 
   void _showNotificationOverlay() {
     _notificationOverlayEntry = _createNotificationOverlay(context);
-    Overlay.of(context)?.insert(_notificationOverlayEntry!);
+    Overlay.of(context).insert(_notificationOverlayEntry!);
   }
 
   void _closeNotificationOverlay() {
@@ -191,148 +201,188 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _showLoginDialog(BuildContext context) async {
-    setState(() {
-      _errorMessage = null;
-    });
+  setState(() {
+    _errorMessage = null;
+  });
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Autenticação'),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+        content: SizedBox(
+          height: 160,
+          width: 350.0,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Autenticação'),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+              TextField(
+                controller: _loginController,
+                decoration: InputDecoration(
+                  labelText: 'Login',
+                  errorText:
+                      _loginController.text.isEmpty && _errorMessage != null
+                          ? _errorMessage
+                          : null,
+                  prefixIcon: const Icon(Icons.person),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.black),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _PasswordField(
+                controller: _passwordController,
+                errorText:
+                    _passwordController.text.isEmpty && _errorMessage != null
+                        ? _errorMessage
+                        : null,
               ),
             ],
           ),
-          content: SizedBox(
-            height: 160,
-            width: 350.0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _loginController,
-                  decoration: InputDecoration(
-                    labelText: 'Login',
-                    errorText:
-                        _loginController.text.isEmpty && _errorMessage != null
-                            ? _errorMessage
-                            : null,
-                    prefixIcon: const Icon(Icons.person),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                    enabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.black),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                _PasswordField(
-                  controller: _passwordController,
-                  errorText:
-                      _passwordController.text.isEmpty && _errorMessage != null
-                          ? _errorMessage
-                          : null,
-                ),
-              ],
+        ),
+        actions: [
+  Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      ElevatedButton(
+        onPressed: () {
+          _login(context);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 32, 104, 199),
+        ),
+        child: const Text(
+          "Entrar",
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+      ),
+      const SizedBox(height: 10),
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).pop();
+          _showForgotPasswordDialog(context);
+        },
+        style: TextButton.styleFrom(
+          side: const BorderSide(color: Colors.grey, width: 0.3),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          textStyle: const TextStyle(fontSize: 15),
+        ),
+        child: const Text(
+          'Esqueceu sua senha?',
+          style: TextStyle(color: Colors.black, fontSize: 15),
+        ),
+      ),
+      const SizedBox(height: 10),
+      TextButton(
+        onPressed: () {
+          Navigator.of(context).pop();
+          Navigator.pushNamed(context, '/signup');
+        },
+        style: TextButton.styleFrom(
+          side: const BorderSide(color: Colors.grey, width: 0.3),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          textStyle: const TextStyle(fontSize: 15),
+        ),
+        child: const Text(
+          'Crie Sua Conta',
+          style: TextStyle(color: Colors.black, fontSize: 15),
+        ),
+      ),
+    ],
+  ),
+],
+      );
+    },
+  );
+}
+
+Future<void> _updateLoginCount(String userId) async {
+  final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+
+  await userDoc.get().then((doc) {
+    if (doc.exists) {
+      userDoc.update({
+        'loginCount': FieldValue.increment(1),
+        'lastLogin': DateTime.now(),
+      });
+    } else {
+      userDoc.set({
+        'loginCount': 1,
+        'lastLogin': DateTime.now(),
+      });
+    }
+  });
+}
+
+void _login(BuildContext context) async {
+  final authService = Provider.of<AuthService>(context, listen: false);
+  final email = _loginController.text.trim();
+  final password = _passwordController.text.trim();
+
+  setState(() {
+    final List<String> missingFields = [];
+
+    if (email.isEmpty) missingFields.add('LOGIN');
+    if (password.isEmpty) missingFields.add('SENHA');
+
+    if (missingFields.isNotEmpty) {
+      final String errorMessage =
+          'Preencha o(s) campo(s): ${missingFields.join(' e ')} para prosseguir!';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      authService.login(email, password).then((user) async {
+        if (user != null) {
+          _loginController.clear();
+          _passwordController.clear();
+          Navigator.of(context).pop();
+
+          await _updateLoginCount(user.uid);
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login realizado com sucesso!'),
+              backgroundColor: Colors.green,
             ),
-          ),
-          actions: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _login(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 32, 104, 199),
-                  ),
-                  child: const Text(
-                    "Entrar",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _showForgotPasswordDialog(context);
-                  },
-                  style: TextButton.styleFrom(
-                    side: const BorderSide(color: Colors.grey, width: 0.3),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    textStyle: const TextStyle(fontSize: 15),
-                  ),
-                  child: const Text(
-                    'Esqueceu sua senha?',
-                    style: TextStyle(color: Colors.black, fontSize: 15),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.pushNamed(context, '/signup');
-                  },
-                  style: TextButton.styleFrom(
-                    side: const BorderSide(color: Colors.grey, width: 0.3),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    textStyle: const TextStyle(fontSize: 15),
-                  ),
-                  child: const Text(
-                    'Crie Sua Conta',
-                    style: TextStyle(color: Colors.black, fontSize: 15),
-                  ),
-                ),
-              ],
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Falha no login. Verifique suas credenciais.'),
+              backgroundColor: Colors.red,
             ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _login(BuildContext context) {
-    final login = _loginController.text.trim();
-    final password = _passwordController.text.trim();
-
-    setState(() {
-      final List<String> missingFields = [];
-
-      if (login.isEmpty) missingFields.add('LOGIN');
-      if (password.isEmpty) missingFields.add('SENHA');
-
-      if (missingFields.isNotEmpty) {
-        final String errorMessage =
-            'Preencha o(s) campo(s): ${missingFields.join(' e ')} para prosseguir!';
-
+          );
+        }
+      }).catchError((e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text('Erro de autenticação: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      } else {
-        Provider.of<AuthProvider>(context, listen: false).login(login);
-        _isLoggedIn = true;
-
-        _loginController.clear();
-        _passwordController.clear();
-
-        Navigator.of(context).pop();
-
-      }
-    });
-  }
+      });
+    }
+  });
+}
 
   Future<void> _showForgotPasswordDialog(BuildContext context) async {
     // ignore: no_leading_underscores_for_local_identifiers
@@ -458,179 +508,52 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Align(
-          alignment: Alignment.centerLeft,
-          child: Image.network(
-            'https://servicedesk.sydle.com/logo',
-            height: 100.0,
-            width: 100.0,
-          ),
-        ),
-        backgroundColor: Colors.black,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            color: Colors.white,
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            color: Colors.white,
-            onPressed: () {
-              if (_notificationOverlayEntry == null) {
-                _showNotificationOverlay();
-              } else {
-                _closeNotificationOverlay();
-              }
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: authProvider.isLoggedIn ? 
-              Row(children: [
-                Text(
-                  'Bem-Vindo, ${authProvider.userName}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                IconButton(
-                        icon: const Icon(Icons.logout),
-                        color: Colors.white,
-                        onPressed: () {
-                          authProvider.logout();
-                        },
-                      ),
-              ],
-              )
-            : ElevatedButton(
-              onPressed: () {
-                _showLoginDialog(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 32, 104, 199),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                'Entrar',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.black,
-              ),
-              child: Image.network(
-                'https://servicedesk.sydle.com/logo',
-                height: 10.0,
-                width: 10.0,
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle),
-              title: const Text('Perfil'),
-              onTap: () {
-                Navigator.pop(context);
-                _checkLogin(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Configurações'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.feedback),
-              title: const Text('Ajuda'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-      ),
-      body: Column(
+Widget build(BuildContext context) {
+  return HomeScreenBase(
+    child: SingleChildScrollView(
+      physics: const BouncingScrollPhysics(), // Suaviza o scroll
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  buildSearchHeader(),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'Catálogos',
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: filteredCatalogItems.map((item) {
-                              IconData iconData = item['icon'] as IconData;
-                              return _buildCatalogCard(
-                                icon: iconData,
-                                title: item['title']!,
-                                subtitle: item['subtitle']!,
-                                onTap: () {
-                                   Navigator.pushNamed(context, item['route']);
-                                },
-                              );
-                            }).toList(),
-                          ),
-                        ]),
+          buildSearchHeader(),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Catálogos',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            color: Colors.black,
-            height: 60,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Powered by ',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Image.network(
-                    'https://servicedesk.sydle.com/logo',
-                    height: 100.0,
-                    width: 100.0,
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: filteredCatalogItems.map((item) {
+                    IconData iconData = item['icon'] as IconData;
+                    return _buildCatalogCard(
+                      icon: iconData,
+                      title: item['title']!,
+                      subtitle: item['subtitle']!,
+                      onTap: () {
+                        Navigator.pushNamed(context, item['route']);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+
 
   Widget _buildCatalogCard({
     required IconData icon,
@@ -695,66 +618,67 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildSearchHeader() {
-    return Stack(
+ Widget buildSearchHeader() {
+  return Container(
+    height: 220,
+    width: double.infinity, // Garante que o Container ocupe toda a largura
+    decoration: const BoxDecoration(
+      image: DecorationImage(
+        image: NetworkImage(
+          'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8',
+        ),
+        fit: BoxFit.cover, // Preenche o espaço sem distorcer a imagem
+      ),
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          height: 220,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(
-                  'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8'),
-              fit: BoxFit.cover,
+        const Text(
+          'Portal de Relacionamento',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        const Text(
+          'Tire suas dúvidas agora mesmo!',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+          ),
+        ),
+        const SizedBox(height: 15),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            height: 45,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Buscar',
+                prefixIcon: Icon(Icons.search),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
+              ),
+              onChanged: (query) {
+                _filterCatalogItems(query);
+              },
             ),
           ),
         ),
-        Column(
-          children: [
-            const SizedBox(height: 20),
-            const Text(
-              'Portal de Relacionamento',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Tire suas dúvidas agora mesmo!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar',
-                    prefixIcon: Icon(Icons.search),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onChanged: (query) {
-                    _filterCatalogItems(query);
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
-    );
-  }
+    ),
+  );
+}
+
 }
 
 class _PasswordField extends StatefulWidget {
