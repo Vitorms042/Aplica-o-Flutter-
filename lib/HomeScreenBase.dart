@@ -4,8 +4,9 @@ import 'auth_service.dart';
 
 class HomeScreenBase extends StatefulWidget {
   final Widget child;
+  final Future<void> Function(BuildContext context) showLoginDialog;
 
-  const HomeScreenBase({super.key, required this.child});
+  const HomeScreenBase({super.key, required this.child,  required this.showLoginDialog,});
 
   @override
   _HomeScreenBaseState createState() => _HomeScreenBaseState();
@@ -37,60 +38,64 @@ class _HomeScreenBaseState extends State<HomeScreenBase> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
             Container(
-              color: Colors.black,
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Image.network(
-                      'https://servicedesk.sydle.com/logo',
-                      height: 50.0,
-                      width: 100.0,
-                    ),
-                  ),
-                  if (user != null) ...[
-                    Text(
-                      'Bem-Vindo, ${user.email}',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      onPressed: () {
-                        authService.logout();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Logout realizado com sucesso!'),
-                            backgroundColor: Colors.blue,
-                          ),
-                        );
-                      },
-                    ),
-                  ] else
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      child: const Text(
-                        'Entrar',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                ],
-              ),
+  color: Colors.black,
+  padding: const EdgeInsets.all(8.0),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Image.network(
+          'https://servicedesk.sydle.com/logo',
+          height: 50.0,
+          width: 100.0,
+        ),
+      ),
+      
+      if (user != null) ...[
+        Row(
+          children: [
+            Text(
+              'Bem-Vindo, ${user.email}',
+              style: const TextStyle(color: Colors.white),
             ),
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.blue),
+              onPressed: () {
+                authService.logout();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Logout realizado com sucesso!'),
+                    backgroundColor: Colors.blue,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ] 
+      else
+        ElevatedButton(
+          onPressed: () {
+            widget.showLoginDialog(context); 
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+          child: const Text(
+            'Entrar',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+    ],
+  ),
+),
 
-            // Corpo dinâmico
             Expanded(
               child: SingleChildScrollView(
                 child: widget.child,
               ),
             ),
 
-            // BottomNavigationBar
             BottomNavigationBar(
               items: const [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),

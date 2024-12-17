@@ -1,260 +1,180 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth_service.dart';  
 
 class Evento {
   final String nome;
-  final String data;
+  final Timestamp data;
   final String descricao;
 
-  Evento({required this.nome, required this.data, required this.descricao});
-}
+  Evento({
+    required this.nome,
+    required this.data,
+    required this.descricao,
+  });
 
-List<Evento> eventos = [
-  Evento(
-    nome: "Lançamento de Produto",
-    data: "12 de Outubro de 2024",
-    descricao: "Lançamento de nosso novo produto inovador.",
-  ),
-  Evento(
-    nome: "Conferência Anual",
-    data: "25 de Outubro de 2024",
-    descricao: "Conferência sobre tendências de mercado.",
-  ),
-  Evento(
-    nome: "Treinamento Interno",
-    data: "5 de Novembro de 2024",
-    descricao: "Treinamento de equipes internas para novas tecnologias.",
-  ),
-];
-
-class TelaEventos extends StatefulWidget {
-  const TelaEventos({super.key});
-
-  @override
-  _TelaEventosState createState() => _TelaEventosState();
-}
-
-class _TelaEventosState extends State<TelaEventos> {
-  String query = "";
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          buildSearchHeader(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredEventos().length,
-              itemBuilder: (context, index) {
-                final evento = _filteredEventos()[index];
-                return _buildEventCard(
-                  date: evento.data,
-                  title: evento.nome,
-                  description: evento.descricao,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetalhesEvento(evento: evento),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          buildFooter(), // Adicionando o footer
-        ],
-      ),
-    );
+  Map<String, dynamic> toMap() {
+    return {
+      'nome': nome,
+      'data': data,
+      'descricao': descricao,
+    };
   }
 
-  List<Evento> _filteredEventos() {
-    if (query.isEmpty) {
-      return eventos;
-    } else {
-      return eventos
-          .where((evento) =>
-              evento.nome.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+  factory Evento.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Evento(
+      nome: data['nome'] ?? '',
+      data: data['data'] ?? Timestamp.now(),
+      descricao: data['descricao'] ?? '',
+    );
+  }
+}
+
+class CriarEvento extends StatefulWidget {
+  const CriarEvento({super.key});
+
+  @override
+  _CriarEventoState createState() => _CriarEventoState();
+}
+
+class _CriarEventoState extends State<CriarEvento> {
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
+  DateTime _dataEvento = DateTime.now();
+  final TextEditingController _dataController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _dataController.text = "${_dataEvento.day}/${_dataEvento.month}/${_dataEvento.year}";
+  }
+
+  void _pickDate() async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _dataEvento,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null && pickedDate != _dataEvento) {
+      setState(() {
+        _dataEvento = pickedDate;
+        _dataController.text = "${_dataEvento.day}/${_dataEvento.month}/${_dataEvento.year}";
+      });
     }
   }
 
-  Widget _buildEventCard({
-    required String date,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      splashColor: Colors.blue.withOpacity(0.2),
-      highlightColor: Colors.blue.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(15.0),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        height: 130,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              blurRadius: 5.0,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-        child: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                date,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  void _createEvent() {
+    if (_nomeController.text.isEmpty || _descricaoController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Por favor, preencha todos os campos")),
+      );
+      return;
+    }
+
+    Evento novoEvento = Evento(
+      nome: _nomeController.text,
+      data: Timestamp.fromDate(_dataEvento),
+      descricao: _descricaoController.text,
     );
-  }
 
-  Widget buildSearchHeader() {
-    return Stack(
-      children: [
-        Container(
-          height: 220,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(
-                  'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8'),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        Column(
-          children: [
-            const SizedBox(height: 20),
-            const Text(
-              'Portal de Relacionamento',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              'Tire suas dúvidas agora mesmo!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar',
-                    prefixIcon: Icon(Icons.search),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onChanged: (query) {
-                    setState(() {
-                      this.query = query;
-                    });
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+    AuthService().addEvento(novoEvento);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Evento criado com sucesso!")),
     );
+
+    _nomeController.clear();
+    _descricaoController.clear();
+    _dataController.clear();
   }
-
-  Widget buildFooter() {
-    return Container(
-      color: Colors.black,
-      height: 60,
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Powered by ',
-              style: TextStyle(color: Colors.white),
-            ),
-            Image.network(
-              'https://servicedesk.sydle.com/logo',
-              height: 30.0, // Ajuste a altura do logo conforme necessário
-              width: 30.0,  // Ajuste a largura do logo conforme necessário
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class DetalhesEvento extends StatelessWidget {
-  final Evento evento;
-
-  const DetalhesEvento({super.key, required this.evento});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(evento.nome),
+        title: Text("Criar Evento"),
+        backgroundColor: const Color.fromARGB(255, 124, 124, 124),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              evento.data,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            TextField(
+              controller: _nomeController,
+              decoration: InputDecoration(
+                labelText: 'Nome do Evento',
+                border: OutlineInputBorder(),
+              ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              evento.descricao,
-              style: const TextStyle(fontSize: 16),
+            SizedBox(height: 16),
+            TextField(
+              controller: _descricaoController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: 'Descrição',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _dataController,
+              readOnly: true,
+              decoration: InputDecoration(
+                labelText: 'Data do Evento',
+                border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  onPressed: _pickDate,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _createEvent,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black12),
+              child: Text("Criar Evento"),
+            ),
+            SizedBox(height: 32),
+            // Lista de eventos
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('eventos').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Erro ao carregar eventos'));
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text('Nenhum evento encontrado.'));
+                  }
+
+                  final eventos = snapshot.data!.docs.map((doc) => Evento.fromFirestore(doc)).toList();
+
+                  return ListView.builder(
+                    itemCount: eventos.length,
+                    itemBuilder: (context, index) {
+                      final evento = eventos[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          title: Text(evento.nome),
+                          subtitle: Text(evento.descricao),
+                          trailing: Text(
+                            "${evento.data.toDate().day}/${evento.data.toDate().month}/${evento.data.toDate().year}",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
