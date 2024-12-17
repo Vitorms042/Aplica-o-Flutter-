@@ -1,22 +1,20 @@
-// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:projeto_flutter01/main.dart';
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth_service.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _AboutPageState createState() => _AboutPageState();
 }
 
 class _AboutPageState extends State<AboutPage> {
-  final List<FaqItem> _faqItems = [
-    FaqItem(question: "O que é o aplicativo?", answer: "Este aplicativo permite que os usuários acessem serviços e recursos de atendimento de forma prática e intuitiva."),
-    FaqItem(question: "Como posso criar uma conta?", answer: "Para criar uma conta, clique em 'Criar uma conta' na tela de login e preencha seus dados."),
-    FaqItem(question: "É seguro usar este aplicativo?", answer: "Sim! Garantimos a segurança dos seus dados utilizando tecnologias de criptografia avançadas."),
-    FaqItem(question: "Posso recuperar minha senha?", answer: "Sim. Se você esqueceu sua senha, pode usar a opção de recuperação de senha na tela de login."),
-  ];
+  final TextEditingController _questionController = TextEditingController();
+  final TextEditingController _answerController = TextEditingController();
+  final AuthService _authService = AuthService();
 
   void _onItemTapped(int index) {
     switch (index) {
@@ -60,9 +58,9 @@ class _AboutPageState extends State<AboutPage> {
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: Image.network(
-                  'https://servicedesk.sydle.com/logo',
-                  height: 100,
-                  width: 100,
+                  'https://servicedesk.sydle.com/logo',  // Atualize o link para o logo real
+                  height: 80,
+                  width: 80,
                 ),
               ),
             ],
@@ -77,131 +75,195 @@ class _AboutPageState extends State<AboutPage> {
             const Text(
               'Sobre o Aplicativo',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 10),
             const Text(
               'Este aplicativo foi desenvolvido para fornecer uma experiência fácil e eficiente no acesso aos serviços do Portal de Atendimento. Nele, você pode realizar login, criar uma conta, acessar suas informações e enviar feedbacks para aprimorar ainda mais o serviço.',
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 16, color: Colors.black),
             ),
             const SizedBox(height: 20),
-            const Divider(),
+            const Divider(color: Colors.white54),
+            const SizedBox(height: 20),
+            const Text(
+              'Serviços Oferecidos',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'O Service Desk oferece uma gama de serviços para facilitar o atendimento e a resolução de problemas dos usuários.',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const SizedBox(height: 20),
+            const Divider(color: Colors.white54),
             const SizedBox(height: 20),
             const Text(
               'Perguntas Frequentes (FAQ)',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 10),
             _buildFaqSection(),
+            const SizedBox(height: 20),
+            const Divider(color: Colors.white54),
+            const SizedBox(height: 20),
+            const Text(
+              'Fórum de Dúvidas',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Se você tem alguma dúvida não respondida aqui, envie sua pergunta abaixo.',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _questionController,
+              decoration: InputDecoration(
+                labelText: 'Digite sua dúvida aqui',
+                border: OutlineInputBorder(),
+                hintText: 'Escreva sua pergunta...',
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () async {
+                // Salva a dúvida no Firestore
+                await _authService.addQuestion(_questionController.text);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Dúvida enviada com sucesso!')),
+                );
+                _questionController.clear();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Enviar Dúvida',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Divider(color: Colors.white54),
+            const SizedBox(height: 20),
+            const Text(
+              'Todas as Dúvidas',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
+            StreamBuilder<QuerySnapshot>(
+              stream: _authService.getQuestions(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Text('Nenhuma dúvida enviada.');
+                }
+
+                final questions = snapshot.data!.docs;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: questions.length,
+                  itemBuilder: (context, index) {
+                    final question = questions[index];
+                    final questionText = question['question'];
+                    final userName = question['userName'];
+                    final timestamp = question['timestamp']?.toDate();
+                    final answer = question['answer'];
+                    final answerBy = question['answerBy'];
+                    final answerTimestamp = question['answerTimestamp']?.toDate();
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      elevation: 4,
+                      child: ListTile(
+                        title: Text(questionText),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Pergunta por: $userName'),
+                            Text('Data: ${timestamp != null ? timestamp.toLocal().toString() : 'Sem data'}'),
+                            if (answer.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text('Resposta por: $answerBy'),
+                              Text('Data da resposta: ${answerTimestamp != null ? answerTimestamp.toLocal().toString() : 'Sem data'}'),
+                              Text('Resposta: $answer'),
+                            ],
+                            TextField(
+                              controller: _answerController,
+                              decoration: InputDecoration(
+                                labelText: 'Responda aqui',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.grey[200],
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                await _authService.addAnswer(question.id, _answerController.text);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Resposta enviada com sucesso!')),
+                                );
+                                _answerController.clear();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Enviar Resposta',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 1, 
-        onTap: _onItemTapped,  
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info),
-            label: 'Sobre',
-          ),
-        ],
-        selectedItemColor: const Color.fromARGB(255, 80, 82, 84),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.black,
       ),
     );
   }
 
   Widget _buildFaqSection() {
     return Column(
-      children: _faqItems.map((faq) => FaqWidget(faq: faq)).toList(),
-    );
-  }
-}
-
-class FaqItem {
-  final String question;
-  final String answer;
-  bool isExpanded;
-
-  FaqItem({
-    required this.question,
-    required this.answer,
-    this.isExpanded = false,
-  });
-}
-
-class FaqWidget extends StatefulWidget {
-  final FaqItem faq;
-
-  const FaqWidget({super.key, required this.faq});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _FaqWidgetState createState() => _FaqWidgetState();
-}
-
-class _FaqWidgetState extends State<FaqWidget> {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            widget.faq.isExpanded = !widget.faq.isExpanded;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.faq.question,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 8),
-              AnimatedCrossFade(
-                firstChild: Container(),  
-                secondChild: Text(
-                  widget.faq.answer,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                crossFadeState: widget.faq.isExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                duration: const Duration(milliseconds: 300),
-              ),
-            ],
-          ),
-        ),
-      ),
+      children: [
+        // Coloque as perguntas frequentes aqui
+      ],
     );
   }
 }

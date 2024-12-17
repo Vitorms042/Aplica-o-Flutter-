@@ -1,6 +1,9 @@
 // ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:projeto_flutter01/auth_service.dart';
+import 'package:projeto_flutter01/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -111,7 +114,7 @@ class _SignupPageState extends State<SignupPage> {
             elevation: 0,
             centerTitle: true,
             title: const Text(
-              'Crie sua Conta',
+              'Crie sua conta agora mesmo',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -316,42 +319,113 @@ class _SignupPageState extends State<SignupPage> {
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Formulário enviado com sucesso!')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-                  padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+
+                      bool isRegistered = await _registerUser();
+
+                      if (isRegistered) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const HomePage()),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Erro ao cadastrar o usuário')),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
                   ),
+                  child: const Text('Cadastrar', style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
-                child: const Text('Cadastrar', style: TextStyle(fontSize: 18, color: Colors.white)),
-              ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.login),
-            label: 'Login',
-          ),
-        ],
-        selectedItemColor: const Color.fromARGB(255, 80, 82, 84),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.black,
-      ),
     );
+  }
+  
+ Future<bool> _registerUser() async {
+  try {
+    // Coleta os dados do formulário e salva nas variáveis globais
+    UserData.name = _nameController.text;
+    UserData.dateOfBirth = _dateController.text;
+    UserData.email = _emailController.text;
+    UserData.password = _passwordController.text;
+    UserData.gender = _selectedGender ?? '';
+    UserData.area = _selectedArea ?? '';
+    UserData.emailNotification = _emailNotification;
+    UserData.smsNotification = _smsNotification;
+
+    // Coleta as informações do formulário
+    final email = _emailController.text;
+    final password = _passwordController.text;
+    final name = _nameController.text;
+    final dateOfBirth = _dateController.text;
+
+    // Chama o método de registro (usando o AuthService)
+    final user = await AuthService().register(
+      email,
+      password,
+      name,
+      dateOfBirth,
+      UserData.gender,
+      UserData.area,
+      UserData.emailNotification,
+      UserData.smsNotification,
+    );
+
+    if (user != null) {
+      // Cadastro bem-sucedido
+      return true;
+    }
+    return false;
+  } catch (e) {
+    print('Erro ao registrar usuário: $e');
+    return false;
+  }
+}
+}
+
+class UserData {
+  static String name = '';
+  static String dateOfBirth = '';
+  static String email = '';
+  static String password = '';
+  static String gender = '';
+  static String area = '';
+  static bool emailNotification = false;
+  static bool smsNotification = false;
+
+  static Future<void> saveToPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('name', name);
+    prefs.setString('dateOfBirth', dateOfBirth);
+    prefs.setString('email', email);
+    prefs.setString('password', password);
+    prefs.setString('gender', gender);
+    prefs.setString('area', area);
+    prefs.setBool('emailNotification', emailNotification);
+    prefs.setBool('smsNotification', smsNotification);
+  }
+
+  static Future<void> loadFromPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    name = prefs.getString('name') ?? '';
+    dateOfBirth = prefs.getString('dateOfBirth') ?? '';
+    email = prefs.getString('email') ?? '';
+    password = prefs.getString('password') ?? '';
+    gender = prefs.getString('gender') ?? '';
+    area = prefs.getString('area') ?? '';
+    emailNotification = prefs.getBool('emailNotification') ?? false;
+    smsNotification = prefs.getBool('smsNotification') ?? false;
   }
 }

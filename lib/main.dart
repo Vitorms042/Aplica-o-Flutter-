@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:projeto_flutter01/aboutPage.dart';
 import 'package:projeto_flutter01/eventos.dart';
 import 'package:projeto_flutter01/ferramentas.dart';
 import 'package:projeto_flutter01/perfilFuncionarios.dart';
@@ -45,9 +46,10 @@ class MyApp extends StatelessWidget {
         '/': (context) => const HomePage(),
         '/signup': (context) => const SignupPage(),
         '/services': (context) => const ServicePage(),
-        '/perfil': (context) => const perfilFuncionario(),
+        '/perfil': (context) => const PerfilFuncionario(),
         '/ferramentas': (context) => const TelaFerramentas(),
-        '/eventos': (context) => const TelaEventos(),
+        '/eventos': (context) => const CriarEvento(),
+        '/about': (context) => const AboutPage(),
       },
     );
   }
@@ -82,7 +84,7 @@ class _HomePageState extends State<HomePage> {
       'title': 'Sobre o Portal',
       'subtitle': 'Entenda como funciona o Portal da SYDLE.',
       'icon': Icons.info,
-      'route': '/',
+      'route': '/about',
     },
     {
       'title': 'Serviços',
@@ -440,7 +442,7 @@ void _login(BuildContext context) async {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_emailController.text.isEmpty) {
                         setState(() {
                           _emailError = 'Este campo é obrigatório';
@@ -449,8 +451,23 @@ void _login(BuildContext context) async {
                         setState(() {
                           _emailError = null;
                         });
+
+                         String emailContent = '''
+                              Olá,
+
+                              Recebemos uma solicitação para redefinir a senha da sua conta.
+
+                              Clique no link abaixo para redefinir sua senha:
+                              https://example.com/redefinir-senha?email=${_emailController.text}
+
+                              Se você não solicitou isso, ignore este e-mail.
+
+                              Obrigado,
+                              Equipe da Sydle.
+                              ''';
+
                         Navigator.of(context).pop();
-                        _showConfirmationDialog(context);
+                        _showEmailContentDialog(context, emailContent);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -486,32 +503,39 @@ void _login(BuildContext context) async {
     );
   }
 
-  Future<void> _showConfirmationDialog(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirmação'),
-          content:
-              const Text('Email de redefinição de senha enviado com sucesso!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+Future<void> _showEmailContentDialog(BuildContext context, String emailContent) async {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('E-mail de Recuperação de Senha'),
+        content: SingleChildScrollView(
+          child: Text(
+            emailContent,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
+            softWrap: true,  
+            overflow: TextOverflow.visible, 
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Fechar'),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   @override
 Widget build(BuildContext context) {
   return HomeScreenBase(
+    showLoginDialog: _showLoginDialog,
     child: SingleChildScrollView(
-      physics: const BouncingScrollPhysics(), // Suaviza o scroll
+      physics: const BouncingScrollPhysics(), 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -621,13 +645,13 @@ Widget build(BuildContext context) {
  Widget buildSearchHeader() {
   return Container(
     height: 220,
-    width: double.infinity, // Garante que o Container ocupe toda a largura
+    width: double.infinity, 
     decoration: const BoxDecoration(
       image: DecorationImage(
         image: NetworkImage(
           'https://servicedesk.sydle.com/assets/657712578dbad47ce9753c5a/65b004207e928d0872e772f8',
         ),
-        fit: BoxFit.cover, // Preenche o espaço sem distorcer a imagem
+        fit: BoxFit.cover, 
       ),
     ),
     child: Column(
